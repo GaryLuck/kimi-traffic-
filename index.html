@@ -1,529 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Highway Traffic Flow Simulator</title>
-<style>
-  :root {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --panel-border: #334155;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --accent: #38bdf8;
-    --accent-2: #4ade80;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 16px;
-  }
-  h1 { font-size: 1.35rem; margin: 4px 0 2px; }
-  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
-  #stage {
-    position: relative;
-    width: min(1180px, 96vw);
-  }
-  canvas {
-    width: 100%;
-    display: block;
-    border-radius: 10px;
-    background: #14532d;
-    border: 1px solid var(--panel-border);
-  }
-  #phaseBanner {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    padding: 8px 18px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    pointer-events: none;
-    white-space: nowrap;
-    transition: opacity 0.4s;
-  }
-  #controls {
-    width: min(1180px, 96vw);
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 10px;
-    padding: 12px 14px;
-  }
-  button {
-    background: #0ea5e9;
-    border: none;
-    color: #082f49;
-    font-weight: 700;
-    font-size: 0.85rem;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.05s;
-  }
-  button:hover { background: #38bdf8; }
-  button:active { transform: scale(0.97); }
-  button.secondary { background: #334155; color: var(--text); }
-  button.secondary:hover { background: #475569; }
-  button.active { outline: 2px solid var(--accent-2); }
-  .slider-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.82rem;
-    color: var(--muted);
-  }
-  input[type="range"] { accent-color: var(--accent); }
-  #stats {
-    display: flex;
-    gap: 18px;
-    margin-left: auto;
-    font-size: 0.82rem;
-    color: var(--muted);
-    flex-wrap: wrap;
-  }
-  #stats b { color: var(--text); font-variant-numeric: tabular-nums; }
-  #legend {
-    width: min(1180px, 96vw);
-    margin-top: 8px;
-    font-size: 0.78rem;
-    color: var(--muted);
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .chip { display: inline-flex; align-items: center; gap: 6px; }
-  .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>15 Puzzle</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-alt: #1f2937;
+      --tile: #f8fafc;
+      --tile-text: #0f172a;
+      --empty: rgba(148, 163, 184, 0.18);
+      --accent: #38bdf8;
+      --shadow: rgba(15, 23, 42, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 50%);
+      color: #e2e8f0;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(92vw, 460px);
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 22px;
+      box-shadow: 0 18px 60px var(--shadow);
+      padding: 22px 20px 18px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      flex: 1;
+      background: var(--panel-alt);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      display: block;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #f8fafc;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.09s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      font: inherit;
+    }
+
+    button:active { transform: translateY(1px) scale(0.99); }
+
+    .shuffle-btn {
+      padding: 0.8rem 1.3rem;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      color: #082f49;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      box-shadow: 0 10px 22px rgba(56, 189, 248, 0.25);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 18px;
+      border: 2px solid rgba(148, 163, 184, 0.18);
+      padding: 12px;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
+      aspect-ratio: 1;
+    }
+
+    .tile,
+    .empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      user-select: none;
+      aspect-ratio: 1;
+    }
+
+    .tile {
+      background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
+      color: var(--tile-text);
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      font-weight: 800;
+      box-shadow: 0 6px 14px rgba(148, 163, 184, 0.22);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .tile:hover {
+      box-shadow: 0 10px 18px rgba(56, 189, 248, 0.22);
+    }
+
+    .empty {
+      background: var(--empty);
+      border: 1px dashed rgba(148, 163, 184, 0.18);
+    }
+
+    .message {
+      min-height: 2.5em;
+      text-align: center;
+      margin: 16px 0 0;
+      color: #cbd5e1;
+      font-size: 0.98rem;
+      line-height: 1.5;
+    }
+
+    .message.win {
+      color: #86efac;
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
-  <h1>🚗 Highway Traffic Flow Simulator</h1>
-  <div class="subtitle">Intelligent Driver Model &middot; 3 lanes &middot; on-ramp merge &middot; phantom jam demo</div>
+  <main class="app">
+    <h1>15 PUZZLE</h1>
 
-  <div id="stage">
-    <canvas id="road" width="1180" height="360"></canvas>
-    <div id="phaseBanner">Press ▶ Play Demo to watch congestion form and resolve</div>
-  </div>
-
-  <div id="controls">
-    <button id="btnDemo">▶ Play Demo</button>
-    <button id="btnPause" class="secondary">⏸ Pause</button>
-    <button id="btnReset" class="secondary">↺ Reset</button>
-    <button id="btnSpill" class="secondary" title="Force a temporary on-ramp surge">💥 Trigger Surge</button>
-    <div class="slider-group">
-      <label for="simSpeed">Speed</label>
-      <input id="simSpeed" type="range" min="0.5" max="4" step="0.5" value="1">
-      <span id="simSpeedVal">1×</span>
+    <div class="hud" aria-label="Game stats">
+      <div class="stat">
+        <span class="stat-label">Moves</span>
+        <span class="stat-value" id="moves">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Time</span>
+        <span class="stat-value" id="timer">00:00</span>
+      </div>
     </div>
-    <div class="slider-group">
-      <label for="density">Base traffic</label>
-      <input id="density" type="range" min="20" max="80" step="5" value="45">
-      <span id="densityVal">45 veh/min</span>
+
+    <div class="controls">
+      <button class="shuffle-btn" id="shuffleBtn" type="button">Shuffle</button>
     </div>
-    <div id="stats">
-      <span>Time <b id="stTime">0:00</b></span>
-      <span>Vehicles <b id="stCount">0</b></span>
-      <span>Avg speed <b id="stSpeed">–</b></span>
-      <span>Throughput <b id="stFlow">–</b></span>
-    </div>
-  </div>
 
-  <div id="legend">
-    <span class="chip"><span class="dot" style="background:#4ade80"></span> Free-flow (&gt;80 km/h)</span>
-    <span class="chip"><span class="dot" style="background:#facc15"></span> Moderate (40–80)</span>
-    <span class="chip"><span class="dot" style="background:#f87171"></span> Congested (&lt;40 km/h)</span>
-    <span class="chip">⬛ Dark strip = on-ramp merge zone (bottleneck)</span>
-  </div>
+    <div id="board" class="board" aria-label="Puzzle board" role="grid"></div>
 
-<script>
-"use strict";
-/* ============================================================
-   Highway traffic simulator — Intelligent Driver Model (IDM)
-   with MOBIL-style lane changing, an on-ramp bottleneck, and a
-   scripted "demo" mode showing congestion formation & recovery.
-   ============================================================ */
+    <p id="message" class="message">Arrange the tiles in order from 1 to 15.</p>
+  </main>
 
-// ---------- Constants ----------
-const PX_PER_M   = 0.55;              // world scale
-const ROAD_LEN   = 2000;              // metres of simulated highway
-const CANVAS_W   = 1180, CANVAS_H = 360;
-const NUM_LANES  = 3;
-const LANE_W     = 3.7;               // metres
-const RAMP_START = 1200, RAMP_END = 1500;  // merge zone (m)
-const DT         = 0.25;              // sim timestep (s) per frame tick
+  <script>
+    const boardEl = document.getElementById('board');
+    const movesEl = document.getElementById('moves');
+    const timerEl = document.getElementById('timer');
+    const messageEl = document.getElementById('message');
+    const shuffleBtn = document.getElementById('shuffleBtn');
 
-// IDM parameters
-const IDM = { v0: 33.3, T: 1.5, a: 1.4, b: 2.0, s0: 2.0, delta: 4, bMax: 3.5 };
+    const SIZE = 4;
+    const SOLVED = Array.from({ length: SIZE * SIZE }, (_, index) => (index + 1) % (SIZE * SIZE));
+    let board = [...SOLVED];
+    let emptyIndex = board.indexOf(0);
+    let moveCount = 0;
+    let seconds = 0;
+    let timerId = null;
+    let isSolved = false;
 
-// Demo timeline (sim seconds). Inflow rates are vehicles/second across all lanes.
-const DEMO = [
-  { t: 0,   inflow: 0.60, ramp: 0.08, label: "Phase 1 · Free flow — light traffic, everyone at cruising speed" },
-  { t: 25,  inflow: 1.95, ramp: 0.70, label: "Phase 2 · Rush hour — on-ramp surge overloads the merge zone" },
-  { t: 75,  inflow: 0.80, ramp: 0.20, label: "Phase 3 · Congestion — a stop-and-go wave travels backward" },
-  { t: 125, inflow: 0.15, ramp: 0.02, label: "Phase 4 · Recovery — inflow drops, the jam dissolves from the front" },
-  { t: 185, inflow: 0.15, ramp: 0.02, label: "Demo complete — free flow restored. Keep watching or press ↺ Reset" }
-];
-
-// ---------- State ----------
-const canvas = document.getElementById("road");
-const ctx = canvas.getContext("2d");
-let vehicles = [];
-let simTime = 0;
-let running = false;
-let demoMode = false;
-let speedFactor = 1;
-let spawnAcc = 0, rampAcc = 0;
-let nextId = 1;
-let passedCount = 0, flowWindow = [];
-let currentRates = { inflow: 0.16, ramp: 0.02 };
-let demoPhaseIdx = -1;
-
-const rand = (a, b) => a + Math.random() * (b - a);
-
-// ---------- Vehicle ----------
-function makeVehicle(lane, x, speed) {
-  const isTruck = Math.random() < 0.12;
-  return {
-    id: nextId++,
-    lane, x,
-    v: speed,
-    len: isTruck ? rand(9, 12) : rand(4.2, 5.2),
-    v0: isTruck ? rand(22, 25) : rand(28, 36),   // desired speed m/s
-    a: isTruck ? rand(0.7, 1.0) : rand(1.2, 2.0), // max accel
-    color: isTruck ? "#cbd5e1" : `hsl(${Math.floor(rand(0, 360))}, 70%, 55%)`,
-    truck: isTruck,
-    onRamp: false,
-    laneChangeCooldown: rand(0, 3)
-  };
-}
-
-// ---------- IDM helpers ----------
-function leaderInLane(v, lane) {
-  let best = null, bestGap = Infinity;
-  for (const o of vehicles) {
-    if (o === v || o.lane !== lane) continue;
-    const gap = o.x - o.len - v.x;
-    if (gap > -v.len && gap < bestGap) { bestGap = gap; best = o; }
-  }
-  return { leader: best, gap: bestGap };
-}
-
-function followerInLane(v, lane) {
-  let best = null, bestDist = Infinity;
-  for (const o of vehicles) {
-    if (o === v || o.lane !== lane) continue;
-    const dist = v.x - v.len - o.x;
-    if (dist > -o.len && dist < bestDist) { bestDist = dist; best = o; }
-  }
-  return best;
-}
-
-function idmAccel(v, leader, gap) {
-  const leadV = leader ? leader.v : v.v;
-  const dv = v.v - leadV;
-  let s;
-  if (leader && gap < v.v * 0.5) gap = Math.max(gap, 0.1); // clamp overlap
-  s = IDM.s0 + Math.max(0, v.v * IDM.T + (v.v * dv) / (2 * Math.sqrt(v.a * IDM.b)));
-  if (!leader) return v.a * (1 - Math.pow(v.v / v.v0, IDM.delta));
-  return v.a * (1 - Math.pow(v.v / v.v0, IDM.delta) - (s / gap) ** 2);
-}
-
-// ---------- Lane changing (simplified MOBIL) ----------
-function considerLaneChange(v) {
-  v.laneChangeCooldown -= DT;
-  if (v.laneChangeCooldown > 0) return;
-  v.laneChangeCooldown = 0.8;
-
-  const cur = leaderInLane(v, v.lane);
-  const aCur = idmAccel(v, cur.leader, cur.gap);
-  if (aCur > -0.5 && v.v > 0.75 * v.v0) return; // happy, stay
-
-  let bestLane = v.lane, bestA = aCur;
-  for (const nl of [v.lane - 1, v.lane + 1]) {
-    if (nl < 0 || nl >= NUM_LANES) continue;
-    // discourage leaving the merge-adjacent lane (lane 2) into lane 1 near ramp? keep it simple
-    const ahead = leaderInLane(v, nl);
-    const behind = followerInLane(v, nl);
-    const safeGapF = ahead.gap > Math.max(6, v.v * 0.6);
-    const safeGapB = !behind || (v.x - behind.x - behind.len) > Math.max(6, behind.v * 0.7);
-    if (!safeGapF || !safeGapB) continue;
-    const aNew = idmAccel(v, ahead.leader, ahead.gap);
-    // don't brake the new follower too hard
-    const aBehind = behind ? idmAccel(behind, v, v.x - v.len - behind.x) : 0;
-    if (aBehind < -IDM.bMax) continue;
-    if (aNew > bestA + 0.25) { bestA = aNew; bestLane = nl; }
-  }
-  v.lane = bestLane;
-}
-
-// ---------- Spawning ----------
-function trySpawn() {
-  spawnAcc += currentRates.inflow * DT;
-  if (spawnAcc >= 1) {
-    spawnAcc -= 1;
-    const lane = Math.floor(rand(0, NUM_LANES));
-    const probe = { lane, x: 0 };
-    const { gap } = leaderInLane(probe, lane);
-    if (gap > 25) vehicles.push(makeVehicle(lane, 0, rand(24, 30)));
-  }
-  rampAcc += currentRates.ramp * DT;
-  if (rampAcc >= 1) {
-    rampAcc -= 1;
-    const x = rand(RAMP_START + 60, RAMP_END - 80);
-    const probe = { lane: NUM_LANES - 1, x };
-    const { gap } = leaderInLane(probe, NUM_LANES - 1);
-    const behind = followerInLane(probe, NUM_LANES - 1);
-    if (gap > 30 && (!behind || x - behind.x - behind.len > 25)) {
-      const rv = makeVehicle(NUM_LANES - 1, x, rand(12, 18));
-      vehicles.push(rv);
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const secondsPart = totalSeconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(secondsPart).padStart(2, '0')}`;
     }
-  }
-}
 
-// ---------- Demo control ----------
-function applyDemoPhase() {
-  if (!demoMode) return;
-  let idx = 0;
-  for (let i = 0; i < DEMO.length; i++) if (simTime >= DEMO[i].t) idx = i;
-  if (idx !== demoPhaseIdx) {
-    demoPhaseIdx = idx;
-    const p = DEMO[idx];
-    currentRates.inflow = p.inflow;
-    currentRates.ramp = p.ramp;
-    const banner = document.getElementById("phaseBanner");
-    banner.textContent = p.label;
-    banner.style.opacity = 1;
-  }
-}
-
-// ---------- Step ----------
-function step() {
-  applyDemoPhase();
-  trySpawn();
-
-  // sort not required; update physics with frozen leader snapshot
-  const intents = [];
-  for (const v of vehicles) {
-    considerLaneChange(v);
-    const { leader, gap } = leaderInLane(v, v.lane);
-    let acc = idmAccel(v, leader, gap);
-    // drivers ease off approaching the merge zone (bottleneck friction);
-    // the effect releases smoothly once past it so jams can dissolve
-    if (v.x > RAMP_START - 150 && v.x < RAMP_END) acc -= 0.45;
-    else if (v.x >= RAMP_END && v.x < RAMP_END + 120) acc += 0.25;
-    intents.push([v, acc]);
-  }
-  for (const [v, acc] of intents) {
-    v.v = Math.max(0, v.v + acc * DT);
-    v.x += v.v * DT;
-  }
-
-  // remove vehicles past the end
-  const before = vehicles.length;
-  vehicles = vehicles.filter(v => v.x < ROAD_LEN);
-  const exited = before - vehicles.length;
-  if (exited > 0) {
-    passedCount += exited;
-    flowWindow.push({ t: simTime, n: exited });
-  }
-  while (flowWindow.length && flowWindow[0].t < simTime - 60) flowWindow.shift();
-
-  simTime += DT;
-}
-
-// ---------- Rendering ----------
-function laneY(lane) {
-  return 90 + lane * 70;
-}
-
-function draw() {
-  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-
-  // grass
-  ctx.fillStyle = "#14532d";
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-  const scale = CANVAS_W / ROAD_LEN;
-  const roadTop = 60, roadBot = laneY(NUM_LANES - 1) + 35;
-
-  // asphalt
-  ctx.fillStyle = "#1f2937";
-  ctx.fillRect(0, roadTop, CANVAS_W, roadBot - roadTop);
-
-  // shoulder lines
-  ctx.strokeStyle = "#e2e8f0";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, roadTop + 6); ctx.lineTo(CANVAS_W, roadTop + 6);
-  ctx.moveTo(0, roadBot - 6); ctx.lineTo(CANVAS_W, roadBot - 6);
-  ctx.stroke();
-
-  // dashed lane dividers
-  ctx.strokeStyle = "rgba(226,232,240,0.55)";
-  ctx.setLineDash([18, 22]);
-  ctx.lineWidth = 1.5;
-  for (let l = 1; l < NUM_LANES; l++) {
-    const y = (laneY(l - 1) + laneY(l)) / 2;
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_W, y); ctx.stroke();
-  }
-  ctx.setLineDash([]);
-
-  // merge zone shading
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.fillRect(RAMP_START * scale, roadTop, (RAMP_END - RAMP_START) * scale, roadBot - roadTop);
-  ctx.fillStyle = "#f8fafc";
-  ctx.font = "11px system-ui";
-  ctx.fillText("MERGE ZONE", RAMP_START * scale + 8, roadTop + 16);
-
-  // on-ramp wedge
-  const rampTopY = roadBot + 10;
-  ctx.fillStyle = "#374151";
-  ctx.beginPath();
-  ctx.moveTo(RAMP_START * scale, rampTopY + 26);
-  ctx.lineTo(RAMP_END * scale, roadBot - 6);
-  ctx.lineTo(RAMP_END * scale, rampTopY + 26);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#facc15";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(RAMP_START * scale, rampTopY + 26);
-  ctx.lineTo(RAMP_END * scale, roadBot - 6);
-  ctx.stroke();
-  ctx.fillStyle = "#facc15";
-  ctx.font = "10px system-ui";
-  ctx.fillText("ON-RAMP", RAMP_START * scale + 10, rampTopY + 22);
-
-  // distance markers
-  ctx.fillStyle = "rgba(226,232,240,0.5)";
-  ctx.font = "10px system-ui";
-  for (let m = 0; m <= ROAD_LEN; m += 400) {
-    ctx.fillText((m / 1000).toFixed(1) + " km", m * scale + 2, roadBot + 12);
-  }
-
-  // vehicles
-  for (const v of vehicles) {
-    const x = v.x * scale;
-    const y = laneY(v.lane) - 7;
-    const w = v.len * scale;
-    const kmh = v.v * 3.6;
-    ctx.fillStyle = kmh > 80 ? v.color : kmh > 40 ? "#facc15" : "#f87171";
-    ctx.fillRect(x, y, w, 14);
-    // windshield hint
-    ctx.fillStyle = "rgba(15,23,42,0.6)";
-    ctx.fillRect(x + w * 0.7, y + 2, w * 0.18, 10);
-    ctx.strokeStyle = "rgba(0,0,0,0.4)";
-    ctx.strokeRect(x, y, w, 14);
-  }
-}
-
-// ---------- Stats ----------
-function updateStats() {
-  const mm = Math.floor(simTime / 60), ss = Math.floor(simTime % 60);
-  document.getElementById("stTime").textContent = `${mm}:${String(ss).padStart(2, "0")}`;
-  document.getElementById("stCount").textContent = vehicles.length;
-  const avg = vehicles.length ? vehicles.reduce((s, v) => s + v.v, 0) / vehicles.length : 0;
-  document.getElementById("stSpeed").textContent = vehicles.length ? (avg * 3.6).toFixed(0) + " km/h" : "–";
-  const flowN = flowWindow.reduce((s, e) => s + e.n, 0);
-  document.getElementById("stFlow").textContent = (flowN * 60) + " veh/hr";
-}
-
-// ---------- Main loop ----------
-let lastFrame = 0, acc = 0;
-function loop(ts) {
-  requestAnimationFrame(loop);
-  if (!running) { draw(); return; }
-  if (!lastFrame) lastFrame = ts;
-  acc += (ts - lastFrame) / 1000;
-  lastFrame = ts;
-  const frameBudget = DT / speedFactor;
-  let guard = 0;
-  while (acc >= frameBudget && guard < 20) {
-    step();
-    acc -= frameBudget;
-    guard++;
-  }
-  draw();
-  updateStats();
-}
-
-// ---------- Controls ----------
-function reset(demo) {
-  vehicles = [];
-  simTime = 0; spawnAcc = 0; rampAcc = 0; nextId = 1;
-  passedCount = 0; flowWindow = []; demoPhaseIdx = -1;
-  demoMode = demo;
-  currentRates = demo ? { inflow: DEMO[0].inflow, ramp: DEMO[0].ramp }
-                      : { inflow: parseInt(document.getElementById("density").value, 10) / 60, ramp: 0.08 };
-  document.getElementById("phaseBanner").textContent = demo
-    ? DEMO[0].label
-    : "Free-play mode — use 💥 Trigger Surge to cause congestion";
-  document.getElementById("phaseBanner").style.opacity = 1;
-  // seed some traffic so the road isn't empty
-  const seedInflow = demo ? DEMO[0].inflow : currentRates.inflow;
-  const n = Math.floor(seedInflow * 65);
-  for (let i = 0; i < n; i++) {
-    const lane = i % NUM_LANES;
-    const x = (i / n) * ROAD_LEN * 0.9 + rand(-10, 10);
-    vehicles.push(makeVehicle(lane, Math.max(5, x), rand(26, 31)));
-  }
-}
-
-document.getElementById("btnDemo").addEventListener("click", () => {
-  reset(true);
-  running = true;
-  document.getElementById("btnDemo").classList.add("active");
-});
-document.getElementById("btnPause").addEventListener("click", () => {
-  running = !running;
-  document.getElementById("btnPause").textContent = running ? "⏸ Pause" : "▶ Resume";
-});
-document.getElementById("btnReset").addEventListener("click", () => {
-  reset(false);
-  running = true;
-  document.getElementById("btnDemo").classList.remove("active");
-});
-document.getElementById("btnSpill").addEventListener("click", () => {
-  demoMode = false; // take manual control
-  currentRates.inflow = 1.6;
-  currentRates.ramp = 0.6;
-  document.getElementById("phaseBanner").textContent = "Surge triggered! Congestion forming near the merge zone…";
-  setTimeout(() => {
-    if (!demoMode) {
-      currentRates.inflow = parseInt(document.getElementById("density").value, 10) / 60;
-      currentRates.ramp = 0.08;
-      document.getElementById("phaseBanner").textContent = "Surge over — watch the jam dissolve.";
+    function updateStats() {
+      movesEl.textContent = String(moveCount);
+      timerEl.textContent = formatTime(seconds);
     }
-  }, 30000);
-});
-document.getElementById("simSpeed").addEventListener("input", e => {
-  speedFactor = parseFloat(e.target.value);
-  document.getElementById("simSpeedVal").textContent = speedFactor + "×";
-});
-document.getElementById("density").addEventListener("input", e => {
-  document.getElementById("densityVal").textContent = e.target.value + " veh/min";
-  if (!demoMode) currentRates.inflow = parseInt(e.target.value, 10) / 60;
-});
 
-// boot
-reset(false);
-requestAnimationFrame(loop);
-</script>
+    function setMessage(text, win = false) {
+      messageEl.textContent = text;
+      messageEl.classList.toggle('win', win);
+    }
+
+    function isAdjacent(indexA, indexB) {
+      const rowA = Math.floor(indexA / SIZE);
+      const colA = indexA % SIZE;
+      const rowB = Math.floor(indexB / SIZE);
+      const colB = indexB % SIZE;
+      return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+    }
+
+    function isBoardSolved() {
+      return board.every((value, index) => value === SOLVED[index]);
+    }
+
+    function stopTimer() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      timerId = setInterval(() => {
+        if (!isSolved) {
+          seconds += 1;
+          updateStats();
+        }
+      }, 1000);
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+
+      for (let index = 0; index < board.length; index += 1) {
+        const value = board[index];
+
+        if (value === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.setAttribute('aria-hidden', 'true');
+          boardEl.appendChild(empty);
+          continue;
+        }
+
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'tile';
+        tile.textContent = String(value);
+        tile.setAttribute('aria-label', `Move tile ${value}`);
+        tile.addEventListener('click', () => moveTile(index));
+        boardEl.appendChild(tile);
+      }
+    }
+
+    function tryMoveTile(targetIndex) {
+      if (!isAdjacent(targetIndex, emptyIndex)) {
+        return false;
+      }
+
+      [board[targetIndex], board[emptyIndex]] = [board[emptyIndex], board[targetIndex]];
+      emptyIndex = targetIndex;
+      moveCount += 1;
+      updateStats();
+      renderBoard();
+
+      if (isBoardSolved()) {
+        isSolved = true;
+        stopTimer();
+        setMessage(`Solved in ${moveCount} moves and ${formatTime(seconds)}!`, true);
+      } else {
+        isSolved = false;
+      }
+
+      return true;
+    }
+
+    function moveTile(index) {
+      if (isSolved) {
+        return;
+      }
+      tryMoveTile(index);
+    }
+
+    function moveBlankByDirection(direction) {
+      const row = Math.floor(emptyIndex / SIZE);
+      const col = emptyIndex % SIZE;
+
+      let targetIndex = null;
+      if (direction === 'up' && row < SIZE - 1) targetIndex = emptyIndex + SIZE;
+      if (direction === 'down' && row > 0) targetIndex = emptyIndex - SIZE;
+      if (direction === 'left' && col < SIZE - 1) targetIndex = emptyIndex + 1;
+      if (direction === 'right' && col > 0) targetIndex = emptyIndex - 1;
+
+      if (targetIndex !== null) {
+        tryMoveTile(targetIndex);
+      }
+    }
+
+    function resetState() {
+      board = [...SOLVED];
+      emptyIndex = board.indexOf(0);
+      moveCount = 0;
+      seconds = 0;
+      isSolved = false;
+      stopTimer();
+      updateStats();
+      setMessage('Arrange the tiles in order from 1 to 15.');
+      renderBoard();
+    }
+
+    function shuffleBoard() {
+      const working = [...SOLVED];
+      let blank = working.indexOf(0);
+      let previousBlank = -1;
+
+      for (let step = 0; step < 220; step += 1) {
+        const row = Math.floor(blank / SIZE);
+        const col = blank % SIZE;
+        const options = [];
+
+        if (row > 0) options.push(blank - SIZE);
+        if (row < SIZE - 1) options.push(blank + SIZE);
+        if (col > 0) options.push(blank - 1);
+        if (col < SIZE - 1) options.push(blank + 1);
+
+        const validOptions = options.filter((index) => index !== previousBlank);
+        const next = validOptions[Math.floor(Math.random() * validOptions.length)];
+
+        [working[blank], working[next]] = [working[next], working[blank]];
+        previousBlank = blank;
+        blank = next;
+      }
+
+      if (working.every((value, index) => value === SOLVED[index])) {
+        [working[14], working[15]] = [working[15], working[14]];
+        blank = 14;
+      }
+
+      board = working;
+      emptyIndex = blank;
+      moveCount = 0;
+      seconds = 0;
+      isSolved = false;
+      startTimer();
+      updateStats();
+      setMessage('Shuffled. Put the tiles back in order.');
+      renderBoard();
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        moveBlankByDirection('up');
+      }
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        moveBlankByDirection('down');
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        moveBlankByDirection('left');
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        moveBlankByDirection('right');
+      }
+    });
+
+    shuffleBtn.addEventListener('click', shuffleBoard);
+
+    resetState();
+    shuffleBoard();
+  </script>
 </body>
 </html>
