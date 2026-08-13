@@ -269,13 +269,16 @@
     }
 
     function tryMoveTile(targetIndex) {
-      if (!isAdjacent(targetIndex, emptyIndex)) {
+      if (isSolved || !isAdjacent(targetIndex, emptyIndex)) {
         return false;
       }
 
       [board[targetIndex], board[emptyIndex]] = [board[emptyIndex], board[targetIndex]];
       emptyIndex = targetIndex;
       moveCount += 1;
+      if (!timerId) {
+        startTimer();
+      }
       updateStats();
       renderBoard();
 
@@ -283,8 +286,6 @@
         isSolved = true;
         stopTimer();
         setMessage(`Solved in ${moveCount} moves and ${formatTime(seconds)}!`, true);
-      } else {
-        isSolved = false;
       }
 
       return true;
@@ -298,6 +299,10 @@
     }
 
     function moveBlankByDirection(direction) {
+      if (isSolved) {
+        return;
+      }
+
       const row = Math.floor(emptyIndex / SIZE);
       const col = emptyIndex % SIZE;
 
@@ -348,8 +353,18 @@
       }
 
       if (working.every((value, index) => value === SOLVED[index])) {
-        [working[14], working[15]] = [working[15], working[14]];
-        blank = 14;
+        const row = Math.floor(blank / SIZE);
+        const col = blank % SIZE;
+        const options = [];
+
+        if (row > 0) options.push(blank - SIZE);
+        if (row < SIZE - 1) options.push(blank + SIZE);
+        if (col > 0) options.push(blank - 1);
+        if (col < SIZE - 1) options.push(blank + 1);
+
+        const target = options[Math.floor(Math.random() * options.length)];
+        [working[blank], working[target]] = [working[target], working[blank]];
+        blank = target;
       }
 
       board = working;
